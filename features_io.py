@@ -2,11 +2,15 @@ import pprint
 
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import normalize, maxabs_scale
 
-from features import mfcc_features
+from features import mfcc_features, logfbank_features
 from utils import get_fname_label_pairs
 
-def generate_mfcc_features(folder="a", train=True):
+def generate_feature_mat(folder="a", train=True):
+    """
+    Generate feature matrix
+    """
     training_df = get_fname_label_pairs(folder="a", train=train)
 
     features_df = pd.DataFrame()
@@ -14,7 +18,16 @@ def generate_mfcc_features(folder="a", train=True):
         wav_file = "training/training-{}/{}.wav".format(folder, 
                 training_df.iloc[i]["filename"])
         mfcc_feat = mfcc_features(wav_file)
-        features_df = features_df.append([mfcc_feat], ignore_index=True)
+        # normalization
+        # don't do normalization. It reduces accuracy
+        # mfcc_feat /= np.max(np.abs(mfcc_feat), axis=0)
+        logfbank_feat = logfbank_features(wav_file)
+        # normalization
+        # don't do normalization. It reduces accuracy
+        # logfbank_feat /= np.max(np.abs(logfbank_feat), axis=0)
+        comb_feat = np.append(mfcc_feat, logfbank_feat)
+        features_df = features_df.append([comb_feat], ignore_index=True)
+    
     #pprint.pprint(features_df.shape)
     #pprint.pprint(features_df.head())
 
@@ -25,7 +38,4 @@ def generate_mfcc_features(folder="a", train=True):
     #pprint.pprint(labels)
 
     return features_df, labels
-
-#a, b = generate_mfcc_features()
-#pprint.pprint(b)
 
